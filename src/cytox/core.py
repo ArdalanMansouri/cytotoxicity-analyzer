@@ -1,5 +1,3 @@
-
-
 def map_num_to_letter(df, col='Row', inplace=True):
     """
     Maps integer row numbers (1–26) to uppercase alphabet letters.
@@ -148,6 +146,253 @@ class Categorizer:
         return self.df_treated
 
 
+def cytotox_raw_plot(
+    df, 
+    *,
+    # Define the name of cols for x and y axes  
+    x_col: str = "Nuclei - Intensity Nucleus Alexa 488 Mean",
+    y_col: str = "Nuclei - Intensity Nucleus Alexa 568 Mean",
+    # Define the labels for x and y axes and the graph title. 
+    x_label: str = "Caspase 3/7 average signal intensity",
+    y_label: str = "PI mean signal intensity",
+    title: str,
+    casp_thresh: float,
+    pi_thresh: float,
+    # Merge the replicates or leave them stand-alone  
+    # False = separate wells, True = combined replicates
+    merge_replicates: bool = False,        
+    # Auto-set the ranges of x and y axes based on merge_replicates if None
+    x_range: list = None,                
+    y_range: list = None,
+    # Auto-set number of cols of facet based on merge_replicates if None
+    facet_col_wrap: int = None,            
+    facet_row_spacing: float = None,       
+    facet_col_spacing: float = 0.02,
+    cell_width: int = 200, # Width per subplot cell
+    cell_height: int = 200, # Height per subplot cell
+    # Markers transparency and size
+    marker_opacity: float = 0.6,
+    marker_size: int = 5,
+    # Positioning of annotations  
+    casp_annot_y: float = 50000, # y position of "Caspase thresh" label
+    pi_annot_x: float = None, # x position of "PI thresh" label 
+    x_label_y_offset: float = None, # y offset of shared x-axis label.  
+    title_y: float = None, # vertical position of title    
+    title_color: str = "red",
+
+    # Whether to show the figure immediately after creation. You need to set
+    # this to False if you want to further customize the figure before 
+    # showing it. Otherwise, two figures will be shown: one before 
+    # customization and one after it.
+    fig_show: bool = True, 
+
+    # Export 
+    export_path: str = None,
+):
+    """
+    Create a scatter plot with facets for each sample or plate format, showing 
+    the relationship between Caspase 3/7 intensity vs PI intensity. 
+    The function allows for customization of various aspects of the plot, 
+    including merging replicates, setting axis ranges, adjusting marker 
+    properties, and adding threshold lines and annotations. The resulting 
+    figure can be displayed immediately or further customized before display.
+    Additionally, there is an option to export the figure to a specified path.
+
+    Args:
+        df (pd.DataFrame): The input DataFrame containing the data to be 
+            plotted.
+        x_col (str): The name of the column to be used for the x-axis.
+        y_col (str): The name of the column to be used for the y-axis.
+        x_label (str): The label for the x-axis.
+        y_label (str): The label for the y-axis.
+        title (str): The title of the plot.
+        casp_thresh (float): The threshold value for Caspase 3/7 intensity, 
+            which will be indicated by a dashed red vertical line.
+        pi_thresh (float): The threshold value for PI intensity, 
+            which will be indicated by a dashed red horizontal line.
+        merge_replicates (bool): Whether to merge replicates or leave them 
+            separate.
+        x_range (list): The range for the x-axis.
+        y_range (list): The range for the y-axis.
+        facet_col_wrap (int): The number of columns for the facets.
+        facet_row_spacing (float): The spacing between rows of facets.
+        facet_col_spacing (float): The spacing between columns of facets.
+        cell_width (int): The width of each subplot cell.
+        cell_height (int): The height of each subplot cell.
+        marker_opacity (float): The opacity of the markers.
+        marker_size (int): The size of the markers.
+        casp_annot_y (float): The y position of the "Caspase thresh" label.
+        pi_annot_x (float): The x position of the "PI thresh" label.
+        x_label_y_offset (float): The y offset of the shared x-axis label.
+        title_y (float): The vertical position of the title.
+        title_color (str): The color of the title.
+        fig_show (bool): Whether to show the figure immediately after creation
+            or to allow for further customization before display.
+        export_path (str): The file path to export the figure. If None, the 
+            figure will not be exported.
+    """
+
+    import math
+    import plotly.express as px
+
+    # Behavior in case of separate wells vs merged replicates
+    if merge_replicates:
+        facet_col = "Sample"
+        facet_col_wrap = facet_col_wrap  or 3
+        facet_row_spacing = facet_row_spacing or 0.08
+        x_range = x_range or [0, 80000]
+        y_range = y_range or [0, 80000]
+        x_label_y_offset = x_label_y_offset or -0.08
+        title_y = title_y or 0.97
+    else:
+        facet_col = "Plate format"
+        facet_col_wrap  = facet_col_wrap  or 6
+        facet_row_spacing = facet_row_spacing or 0.04
+        x_range = x_range or [0, 70000]
+        y_range = y_range or [0, 70000]
+        x_label_y_offset = x_label_y_offset or -0.05
+        title_y = title_y or 0.99
+
+    pi_annot_x = pi_annot_x or (x_range[1] - 10000)
+
+    # Auto-calculate figure size
+    n_facets = df[facet_col].nunique()
+    n_cols = min(n_facets, facet_col_wrap)
+    n_rows = math.ceil(n_facets / facet_col_wrap)
+    width = n_cols * cell_width  + 200
+    height = n_rows * cell_height + 200
+
+    # Create the scatter plot with facets
+    fig = px.scatter(
+        data_frame=df,
+        x=x_col,
+        y=y_col,
+        facet_col=facet_col,
+        facet_col_wrap=facet_col_wrap,
+        labels={x_col: x_label, y_col: y_label},
+        facet_row_spacing=facet_row_spacing,
+        facet_col_spacing=facet_col_spacing,
+        width=width,
+        height=height,
+    )
+
+    # Set marker properties for better visibility
+    fig.update_traces(marker=dict(opacity=marker_opacity, size=marker_size))
+
+    # Draw axes lines on all facets and set their properties
+    fig.update_xaxes(
+        showline=True, linewidth=2, linecolor='black',
+        mirror=True, ticks="outside", showticklabels=True,
+        range=x_range, title_font_size=12
+    )
+    fig.update_yaxes(
+        showline=True, linewidth=2, linecolor='black',
+        mirror=True, ticks="outside",
+        title_font=dict(size=15), range=y_range
+    )
+
+    # Draw threshold lines on all facets
+    fig.add_hline(
+        y=pi_thresh, line_dash="dash", line_color="red", opacity=0.5
+    )
+    fig.add_vline(
+        x=casp_thresh, line_dash="dash", line_color="red", opacity=0.5
+    )
+
+    # Reverse the order of traces:
+    # This means that the blue spots (with lower data points than red spots) 
+    # will be shown on top of the red spots. Otherwise, most of the of blue 
+    # spots will remain hidden behind the crowd of red spots.
+    fig.data = fig.data[::-1]
+    # ---Why do we reverse the order of traces?---
+    # Note1: 
+    # Here, only changing the alpha value does not help to make the blue 
+    # spots visible. This is because the red spots are very crowded and they 
+    # are drawn on top of the blue spots. Therefore, we need to change the 
+    # order of traces drawn.
+
+    # Note2: 
+    # The order of tracer drawing is based on the order of the values in the 
+    # data. Here., the data of 1 h is normally drawn before 3 h. Nevertheless, 
+    # we changed the drawing order.  
+    # --------------------------------------------
+
+    # After changing the order of traces, the order of markers also changes 
+    # in the legend. However, we can reverse the order back to the original 
+    # order by setting traceorder to "reversed".
+    fig.update_layout(legend={'traceorder': 'reversed'})
+    
+
+    # Set the background color to white for better visibility
+    fig.update_layout(plot_bgcolor="white", paper_bgcolor="white")
+
+    # Remap facet labels to Sample name if separate wells, otherwise keep 
+    # Plate format
+    if not merge_replicates:
+        # Separate wells: facet_col is "Plate format" — remap to Sample name
+        plate_to_sample = dict(zip(df["Plate format"], df["Sample"]))
+        fig.for_each_annotation(
+            lambda a: a.update(
+                text=plate_to_sample.get(a.text.split("=")[-1], a.text)
+            )
+        )
+
+    # Strip the "key=value" prefix in both modes
+    fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
+
+    # Increase the font size of facet labels for better readability
+    fig.update_annotations(font_size=15)
+
+    # Set the position of threshold annotations and add them to the figure
+    fig.add_annotation(
+        x=casp_thresh + 2000, y=casp_annot_y,
+        text='Caspase thresh', font_size=10, textangle=90,
+        showarrow=False, row="all", col="all"
+    )
+    fig.add_annotation(
+        x=pi_annot_x, y=pi_thresh + 4000,
+        text='PI thresh', font_size=10, textangle=0,
+        showarrow=False, row="all", col="all"
+    )
+
+    # Set shared x and y axis labels by adding annotations in the center of 
+    # the figure
+    fig.for_each_xaxis(lambda x: x.update(title=''))
+    fig.for_each_yaxis(lambda y: y.update(title=''))
+
+    fig.add_annotation(
+        text=x_label, xref="paper", yref="paper",
+        x=0.5, y=x_label_y_offset,
+        showarrow=False, font=dict(size=20)
+    )
+    fig.add_annotation(
+        text=y_label, xref="paper", yref="paper",
+        x=-0.07, y=0.5,
+        showarrow=False, textangle=-90, font=dict(size=20)
+    )
+
+    # Add the title with specified position and color
+    fig.update_layout(
+        title_text=title,
+        title_x=0.5,
+        title_y=title_y,
+        title_font=dict(size=20, color=title_color),
+        margin=dict(t=100)
+    )
+
+    # Export, if needed
+    if export_path:
+        if export_path.endswith(".html"):
+            fig.write_html(export_path)
+        else:
+            fig.write_image(export_path)
+
+    if fig_show:
+        fig.show()
+
+    return fig
+
+
 # Caclulate the slope of lines for gating 
 def line_formula(x1, y1, x2, y2):
     """Args:
@@ -225,7 +470,7 @@ def cytotox_group(row, position1_col, position2_col):
 
 
 
-def cytotox_scatter_plot(df, casp_threshold, pi_threshold, 
+def cytotox_gated_plot(df, casp_threshold, pi_threshold, 
                          x1_line1, y1_line1, x2_line1, y2_line1,
                          x1_line2, y1_line2, x2_line2, y2_line2, 
                          incubation = "30min",
