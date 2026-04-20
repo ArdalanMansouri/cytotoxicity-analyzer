@@ -204,39 +204,39 @@ def cytotox_raw_plot(
     Additionally, there is an option to export the figure to a specified path.
 
     Args:
-        df (pd.DataFrame): The input DataFrame containing the data to be 
+        df: The input DataFrame containing the data to be 
             plotted.
-        x_col (str): The name of the column to be used for the x-axis.
-        y_col (str): The name of the column to be used for the y-axis.
-        x_label (str): The label for the x-axis.
-        y_label (str): The label for the y-axis.
-        title (str): The title of the plot.
-        casp_thresh (float): The threshold value for Caspase 3/7 intensity, 
+        x_col: The name of the column to be used for the x-axis.
+        y_col: The name of the column to be used for the y-axis.
+        x_label: The label for the x-axis.
+        y_label: The label for the y-axis.
+        title: The title of the plot.
+        casp_thresh: The threshold value for Caspase 3/7 intensity, 
             which will be indicated by a dashed red vertical line.
-        pi_thresh (float): The threshold value for PI intensity, 
+        pi_thresh: The threshold value for PI intensity, 
             which will be indicated by a dashed red horizontal line.
         merge_replicates (bool): Whether to merge replicates or leave them 
             separate.
-        x_range (list): The range for the x-axis.
-        y_range (list): The range for the y-axis.
-        facet_col_wrap (int): The number of columns for the facets.
-        facet_row_spacing (float): The spacing between rows of facets.
-        facet_col_spacing (float): The spacing between columns of facets.
-        cell_width (int): The width of each subplot cell.
-        cell_height (int): The height of each subplot cell.
-        marker_opacity (float): The opacity of the markers.
-        marker_size (int): The size of the markers.
-        casp_annot_y (float): The y position of the "Caspase thresh" label.
-        pi_annot_x (float): The x position of the "PI thresh" label.
-        x_label_y_offset (float): The y offset of the shared x-axis label.
-        title_y (float): The vertical position of the title.
-        title_color (str): The color of the title.
-        fig_show (bool): Whether to show the figure immediately after creation
+        x_range: The range for the x-axis.
+        y_range: The range for the y-axis.
+        facet_col_wrap: The number of columns for the facets.
+        facet_row_spacing: The spacing between rows of facets.
+        facet_col_spacing: The spacing between columns of facets.
+        cell_width: The width of each subplot cell.
+        cell_height: The height of each subplot cell.
+        marker_opacity: The opacity of the markers.
+        marker_size: The size of the markers.
+        casp_annot_y: The y position of the "Caspase thresh" label.
+        pi_annot_x: The x position of the "PI thresh" label.
+        x_label_y_offset: The y offset of the shared x-axis label.
+        title_y: The vertical position of the title.
+        title_color: The color of the title.
+        fig_show: Whether to show the figure immediately after creation
             or to allow for further customization before display.
         export_path (str): The file path to export the figure. If None, the 
             figure will not be exported.
     """
-    
+
     # Behavior in case of separate wells vs merged replicates
     if merge_replicates:
         facet_col = "Sample"
@@ -462,7 +462,11 @@ def compute_cytotox_table(
 
 
 # Caclulate the slope of lines for gating 
-def line_formula(x1, y1, x2, y2):
+def line_formula(
+        x1: float, 
+        y1: float, 
+        x2: float, 
+        y2: float):
     """Args:
         x1, y1: Coordinates of the first point.
         x2, y2: Coordinates of the second point.
@@ -475,9 +479,13 @@ def line_formula(x1, y1, x2, y2):
     print("The line equation is: y = {:.2f}x + {:.2f}".format(m, b))
     return m, b # return slope and y-intercept
 
-def position(row, m_line, b_line, x_axis_thresh, y_axis_thresh,
-            x_axis_col= 'Nuclei - Intensity Nucleus Alexa 488 Mean',
-            y_axis_col= 'Nuclei - Intensity Nucleus Alexa 568 Mean'): 
+def position(
+    row, 
+    m_line: float, b_line: float, 
+    x_axis_thresh: float, y_axis_thresh: float,
+    x_axis_col: str = 'Nuclei - Intensity Nucleus Alexa 488 Mean',
+    y_axis_col: str = 'Nuclei - Intensity Nucleus Alexa 568 Mean'
+): 
 
     """
     Args:
@@ -509,7 +517,11 @@ def position(row, m_line, b_line, x_axis_thresh, y_axis_thresh,
             # Or row[y_coord_col] == row[y_on_line_col]
             return 'on' 
 
-def cytotox_group(row, position1_col, position2_col):
+def cytotox_group(
+    row: pd.Series, 
+    position1_col: str, 
+    position2_col: str
+):
     """
     Args:
         row: each row of the dataframe containing the cytotoxicity value. 
@@ -538,27 +550,30 @@ def cytotox_group(row, position1_col, position2_col):
 
 
 
-def cytotox_gated_plot(df, casp_threshold, pi_threshold, 
-                         x1_line1, y1_line1, x2_line1, y2_line1,
-                         x1_line2, y1_line2, x2_line2, y2_line2, 
-                         incubation = "30min",
-                         combine_duplicates=True, 
-                         width=1300, height=850, 
-                         facet_col_spacing=0.02,
-                         facet_row_spacing=0.09,
-                         x_axis_tick_label_font_size=14,
-                         y_axis_tick_label_font_size=14,
-                         x_axis_label_x_position=0.5,
-                         x_axis_label_y_position=-0.1,
-                         y_axis_label_x_position=0.45,  
-                         y_axis_label_y_position=-0.07, 
-                         x_axis_label_font_size=20,
-                         y_axis_label_font_size=20,
-                         sep_line_x_axis_position=3.5,  
-                         sep_line_start_y_position=0.0,
-                         sep_line_end_y_position=30000,
-                         title = False,
-                         ): 
+def cytotox_gated_plot(
+    df: pd.DataFrame, 
+    casp_threshold: float, pi_threshold: float,
+    x1_line1: float, y1_line1: float, x2_line1: float, y2_line1: float,
+    x1_line2: float, y1_line2: float, x2_line2: float, y2_line2: float,
+    incubation: str = "30min",
+    combine_duplicates: bool = True, 
+    width: int = 1300, height: int = 850, 
+    facet_col_spacing: float = 0.02,
+    facet_row_spacing: float = 0.09,
+    x_axis_tick_label_font_size: int = 14,
+    y_axis_tick_label_font_size: int = 14,
+    x_axis_label_x_position: float = 0.5,
+    x_axis_label_y_position: float = -0.1,
+    y_axis_label_x_position: float = 0.45,  
+    y_axis_label_y_position: float = -0.07, 
+    x_axis_label_font_size: int = 20,
+    y_axis_label_font_size: int = 20,
+    sep_line_x_axis_position: float = 3.5,  
+    sep_line_start_y_position: float = 0.0,
+    sep_line_end_y_position: float = 30000,
+    title: bool = False,
+): 
+    
     """A function for generating scatterplot for the result of cytotoxicity 
     assay.
 
@@ -757,29 +772,31 @@ def cytotox_gated_plot(df, casp_threshold, pi_threshold,
 
     # Return the figure object for further use if needed.
     return fig  
-    
 
-def cytotox_count_stacked_bar(df, cytotox_column="cytotox_group", 
-                              sample_column="Plate format", 
-                              bar_width=0.3, combine_duplicates=True,
-                              x_axis_tick_label_font_size=17, 
-                              y_axis_tick_label_font_size=17,
-                              x_axis_title_font_size=20, 
-                              y_axis_title_font_size=20, title=False,
-                              ):
+
+def cytotox_count_stacked_bar(
+    df, 
+    cytotox_column: str = "cytotox_group", sample_column: str = "Plate format", 
+    bar_width: float = 0.3, 
+    combine_duplicates: bool = True,
+    x_axis_tick_label_font_size: int = 17, 
+    y_axis_tick_label_font_size: int = 17,
+    x_axis_title_font_size: int = 20, 
+    y_axis_title_font_size: int = 20, title: bool = False,
+):
     """
     Create a stacked bar graph of cytotoxicity groups by sample using raw 
     counts, with samples ordered by Samples_order column.
 
     Args:
-        df (pandas.DataFrame): DataFrame containing cytotoxicity data.
-        cytotox_column (str): Column name for cytotoxicity groups. 
+        df: DataFrame containing cytotoxicity data.
+        cytotox_column: Column name for cytotoxicity groups. 
             Defaults to "cytotox_group".
-        sample_column (str): Column name for sample names. 
+        sample_column: Column name for sample names. 
             Defaults to "Plate format".
 
     Returns:
-        fig (plotly.graph_objects.Figure): Stacked bar graph figure.
+        fig: Stacked bar graph figure.
     """
     
     # Define cytotoxicity groups and colors
@@ -940,11 +957,22 @@ def cytotox_count_stacked_bar(df, cytotox_column="cytotox_group",
     return fig
 
 
-def cytotox_percent_stacked_bar(df, cytotox_column="cytotox_group", 
-                                sample_column="Plate format"):
+def cytotox_percent_stacked_bar(
+    df: pd.DataFrame, 
+    cytotox_column: str="cytotox_group", 
+    sample_column: str="Plate format"):
     """
     Create a stacked bar graph of cytotoxicity groups by sample using 
     percentages, with samples ordered by Samples_order column.
+
+    Args:
+        df: DataFrame containing cytotoxicity data.
+        cytotox_column: Column name for cytotoxicity groups. 
+            Defaults to "cytotox_group".
+        sample_column: Column name for sample names.
+            Defaults to "Plate format".
+    Returns:
+        fig: Stacked bar graph figure with percentages.
     """
     
     # Define cytotoxicity groups and colors
