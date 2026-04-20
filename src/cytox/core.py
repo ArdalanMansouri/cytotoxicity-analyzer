@@ -1,3 +1,11 @@
+import pandas as pd 
+import string
+import math
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+
 def map_num_to_letter(df, col='Row', inplace=True):
     """
     Maps integer row numbers (1–26) to uppercase alphabet letters.
@@ -10,8 +18,6 @@ def map_num_to_letter(df, col='Row', inplace=True):
     Returns:
         pd.DataFrame 
     """
-
-    import string
 
     row_map = {
         i: letter for i, 
@@ -65,8 +71,7 @@ class Categorizer:
             pd.DataFrame: The treated dataframe including a new 
                 category column based on the SD threshold.
         """
-        import pandas as pd 
-    
+
         self.df_untreated = df_untreated
         self.df_treated = df_treated
         self.normalized_column = normalized_column
@@ -231,10 +236,7 @@ def cytotox_raw_plot(
         export_path (str): The file path to export the figure. If None, the 
             figure will not be exported.
     """
-
-    import math
-    import plotly.express as px
-
+    
     # Behavior in case of separate wells vs merged replicates
     if merge_replicates:
         facet_col = "Sample"
@@ -393,6 +395,72 @@ def cytotox_raw_plot(
     return fig
 
 
+def compute_cytotox_table(
+    df: pd.DataFrame,
+    casp_thresh: float,
+    pi_thresh: float,
+    casp_col: str = "Nuclei - Intensity Nucleus Alexa 488 Mean",
+    pi_col: str = "Nuclei - Intensity Nucleus Alexa 568 Mean",
+    sample_col: str = "Sample",
+    well_col: str = "Plate format",
+):
+    """
+
+    Compute a cytotoxicity summary table from a cell-level DataFrame.
+
+    Args:
+        df: Raw data containing one row per cell.
+        casp_thresh: Intensity threshold above which a cell is 
+            Caspase-positive.
+        pi_thresh: Intensity threshold above which a cell is PI-positive.
+        casp_col: Column name for Caspase (Alexa 488) intensity.
+        pi_col: Column name for PI (Alexa 568) intensity.
+        sample_col: Column name identifying the sample/treatment group.
+        well_col: Column name identifying individual wells (used to separate 
+            replicates).
+
+    Returns"
+        Df with one row per (sample, replicate) with counts and percentages.
+    """
+
+    records = []
+
+    for sample in df[sample_col].unique():
+        group = df.loc[df[sample_col] == sample]
+
+        for i, well in enumerate(group[well_col].unique()):
+            well_data = group.loc[group[well_col] == well]
+            total = len(well_data)
+
+            if total == 0:
+                continue
+
+            live = len(
+                well_data.loc[
+                    (well_data[casp_col] < casp_thresh)
+                    & (well_data[pi_col] < pi_thresh)
+                ]
+            )
+            casp_pos = len(well_data.loc[well_data[casp_col] > casp_thresh])
+            pi_pos   = len(well_data.loc[well_data[pi_col]   > pi_thresh])
+
+            records.append(
+                {
+                    "Sample":                  sample,
+                    "Replicate_num":            i + 1,
+                    "Total_cell_count":         total,
+                    "live_cell_count":          live,
+                    "live_cell_percent":        live / total * 100,
+                    "Caspase_positive_count":   casp_pos,
+                    "Caspase_positive_percent": casp_pos / total * 100,
+                    "PI_positive_count":        pi_pos,
+                    "PI_positive_percent":      pi_pos / total * 100,
+                }
+            )
+
+    return pd.DataFrame(records)
+
+
 # Caclulate the slope of lines for gating 
 def line_formula(x1, y1, x2, y2):
     """Args:
@@ -511,11 +579,6 @@ def cytotox_gated_plot(df, casp_threshold, pi_threshold,
         fig (plotly.graph_objects.Figure): A scatterplot for the result of 
             cytotoxicity assay.
     """
-
-
-    import plotly.express as px
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
 
     if combine_duplicates:
         facet_col = "Sample"
@@ -718,8 +781,7 @@ def cytotox_count_stacked_bar(df, cytotox_column="cytotox_group",
     Returns:
         fig (plotly.graph_objects.Figure): Stacked bar graph figure.
     """
-    import pandas as pd
-    import plotly.graph_objects as go
+    
     # Define cytotoxicity groups and colors
     cytotox_groups = [
         ("Late_Apoptosis", "#e4a11f"),
@@ -884,8 +946,7 @@ def cytotox_percent_stacked_bar(df, cytotox_column="cytotox_group",
     Create a stacked bar graph of cytotoxicity groups by sample using 
     percentages, with samples ordered by Samples_order column.
     """
-    import pandas as pd
-    import plotly.graph_objects as go   
+    
     # Define cytotoxicity groups and colors
     cytotox_groups = [
         ("Late_Apoptosis", "#e4a11f"),
