@@ -19,3 +19,51 @@ Cytotoxicity assays based on fluorescent markers such as Caspase 3/7 (an apoptos
 - **Flexible replicate handling** — Supports merging or separating technical replicates across wells, with automatic facet layout calculation based on the number of samples.
 - **Export support** — Figures can be exported directly to HTML (interactive) or static image formats from within the plotting functions.
 - **Reproducible notebook workflows** — Example Jupyter notebooks demonstrate the full pipeline from raw `.txt` data files through cleaning, classification, and visualization.
+
+## Installation
+
+To install the required dependencies, ensure you have Python 3.10 or later installed. It is recommended to use the provided `environment.yml` to create a Conda environment with all dependencies:
+
+```bash
+conda env create -f environment.yml
+conda activate cytotox
+```
+
+Alternatively, install the package and its dependencies directly with pip:
+
+```bash
+pip install .
+```
+
+## Usage
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd cytotoxicity-analyzer
+   ```
+3. Activate the Conda environment:
+   ```bash
+   conda activate cytotox
+   ```
+4. Open the Jupyter notebooks in the `notebooks/` directory to explore the data analysis workflows:
+   - `cytotox_data_cleaning.ipynb` — Load and clean raw single-cell `.txt` files from high-content imaging.
+   - `cytotox_plotting.ipynb` — Generate interactive scatter plots with threshold annotations.
+   - `cytotoxicity_gated_plots.ipynb` — Classify cell populations and produce color-coded gated scatter plots.
+
+## Contributing
+
+Contributions are welcome! If you have suggestions for improvements or new features, feel free to open an issue or submit a pull request.
+
+## License
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+## Acknowledgments
+
+This project is funded by Marie Curie Actions under the European Union’s Horizon 2020 research and innovation program for project proEVLifeCycle, grant No 860303.
+
+Special thanks to the open-source community for providing the foundational libraries (Pandas, NumPy, Plotly, SciPy, Statsmodels, FlowCytometryTools) that make this project possible.
