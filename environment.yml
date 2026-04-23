@@ -1,4 +1,4 @@
-name: fcm
+name: cytotox
 channels:
   - conda-forge
   - defaults
