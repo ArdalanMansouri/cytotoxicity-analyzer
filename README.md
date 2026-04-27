@@ -20,6 +20,11 @@ Cytotoxicity assays based on fluorescent markers such as Caspase 3/7 (an apoptos
 - **Export support** — Figures can be exported directly to HTML (interactive) or static image formats from within the plotting functions.
 - **Reproducible notebook workflows** — Example Jupyter notebooks demonstrate the full pipeline from raw `.txt` data files through cleaning, classification, and visualization.
 
+## Interactive Analysis Notebooks
+Due to limitations of GitHub rendering for Jupyter notebooks, the example analysis notebooks are provided as interactive `.html` files, accessable at [Cytotoxicity Plotting](https://ardalanmansouri.github.io/cytotoxicity-analyzer/) 
+
+The original `.ipynb` files remain available in the [`notebooks/`](notebooks/) folder for those who wish to run or modify the analysis locally.
+
 ## Installation
 
 To install the required dependencies, ensure you have Python 3.10 or later installed. It is recommended to use the provided `environment.yml` to create a Conda environment with all dependencies:
